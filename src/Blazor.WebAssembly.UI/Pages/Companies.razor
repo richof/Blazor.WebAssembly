@@ -1,0 +1,272 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using Blazor.WebAssembly.Core.ViewModels
+@using MatBlazor
+@inject HttpClient Http
+@page "/companies"
+<style>
+    .demo-mat-card {
+        max-width: 300px;
+    }
+
+    .demo-mat-card-content {
+        padding: 1rem;
+    }
+
+    .demo-mat-card-clean-margin {
+        margin: 0px;
+    }
+</style>
+<h3>Companies </h3>
+<p>  <MatButton OnClick="OpenEditCompanyDialog"> Add Company</MatButton></p>
+
+<MatDialog @bind-IsOpen="@companyDialogIsOpen">
+    <EditForm Model="@company" OnValidSubmit="SaveCompany">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <MatDialogTitle> Company Form</MatDialogTitle>
+        <MatDialogContent>
+            <MatCard class="demo-mat-card">
+                <MatCardContent>
+                    <MatFileUpload id="Logo" OnChange="LoadFile" Label="Select Logo Image"></MatFileUpload>
+                    <MatCardMedia Wide="true" ImageUrl="@ByteToString(company.Logo)"></MatCardMedia>
+                    <MatBody2 class="demo-mat-card-content demo-mat-card-clean-margin">
+                        <MatTextField Id="TradeName" @bind-Value="company.TradeName" Label="Name"> </MatTextField>
+                    </MatBody2>
+                </MatCardContent>
+            </MatCard>
+        </MatDialogContent>
+        <MatDialogActions>
+            <MatButton Type="Submit">Save</MatButton>
+        </MatDialogActions>
+    </EditForm>
+</MatDialog>
+<MatDialog @bind-IsOpen="@addressDialogIsOpen">
+    <EditForm Model="@address" OnValidSubmit="SaveAddress">
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+        <MatDialogTitle>Address Form</MatDialogTitle>
+        <MatDialogContent>
+            <MatInputTextComponent @bind-Value="address.StreetName"></MatInputTextComponent>
+            <MatInputTextComponent @bind-Value="address.Number"></MatInputTextComponent>
+        </MatDialogContent>
+        <MatDialogActions>
+            <MatButton Type="submit">Save</MatButton>
+        </MatDialogActions>
+    </EditForm>
+</MatDialog>
+<MatDialog  @bind-IsOpen="@deleteAddressDialogConfirmationIsOpen">
+     <MatDialogContent>
+    <p>Do you want to delete: @address.StreetName, @address.Number ?
+        </p>
+    </MatDialogContent>
+        <MatDialogActions>
+        <MatButton OnClick="@(()=>{deleteAddressDialogConfirmationIsOpen=false;})">Cancel</MatButton>
+            <MatButton OnClick="()=>DeleteAddress(address)">Ok</MatButton>
+
+        </MatDialogActions>
+   
+</MatDialog>
+<MatDialog @bind-IsOpen="@deleteCompanyDialogConfirmationIsOpen">
+    <MatDialogContent>
+        <p>
+            Do you want to delete: @company.TradeName ?
+        </p>
+    </MatDialogContent>
+    <MatDialogActions>
+        <MatButton OnClick="@(()=>{deleteCompanyDialogConfirmationIsOpen=false;})">Cancel</MatButton>
+        <MatButton OnClick="()=>DeleteCompany(company)">Ok</MatButton>
+
+    </MatDialogActions>
+
+</MatDialog>
+
+@if (companies is null)
+{
+    <em>Loading...</em>
+}
+else
+{
+    <div class="mat-layour-grid">
+
+
+
+
+
+        @foreach (var company in companies)
+        {
+            <div class="mat-layout-grid-inner">
+                <div class="mat-layout-grid-cell ">
+                    <div class="mat-layout-grid-inner">
+                        <div class="mat-layout-grid-cell">
+                            <MatCard class="demo-mat-card">
+                                <MatCardContent>
+                                    <MatCardMedia Wide="true" ImageUrl="@ByteToString(company.Logo)"></MatCardMedia>
+                                    <div class="demo-mat-card-content">
+                                        <MatHeadline6 class="demo-mat-card-clean-margin">
+                                            @company.TradeName
+                                        </MatHeadline6>
+                                        <MatSubtitle2 class="demo-mat-card-clean-margin">
+                                            <MatButton Icon="edit" OnClick="()=>OpenEditCompanyDialog(company)"> </MatButton>
+                                         <MatButton Icon="delete" OnClick="()=>OpenDeleteCompanyConfirmationDialog(company)"></MatButton>
+                                        </MatSubtitle2>
+                                    </div>
+                                </MatCardContent>
+
+                            </MatCard>
+                        </div>
+                        <div class="mat-layout-grid-cell mat-layout-grid-cell-span-6">
+                            <MatSubtitle2>Addresses</MatSubtitle2>
+                            <MatButton Icon="add" OnClick="()=>OpenEditAddressDialog(company.Id)">New </MatButton>
+                                <MatList>
+                                    @foreach (var address in company.Addresses)
+                                    {
+                                        <MatListItem>
+                                        @address.StreetName, @address.Number <MatButton Icon="edit" OnClick="()=>OpenEditAddressDialog(address)"></MatButton> <MatButton Icon="delete" OnClick="()=>OpenDeleteAddressConfirmationDialog(address)"></MatButton>
+                                        </MatListItem>
+                                        <MatListDivider></MatListDivider>
+                                    }
+                                </MatList>
+                        </div>
+                    </div>
+                </div>
+               
+            </div>
+            <p></p>
+           <MatDivider></MatDivider>
+            <p></p>
+        }
+    </div>
+    @*</MatThemeProvider>
+    *@}
+
+@code {
+    private List<CompanyViewModel> companies;
+    private CompanyViewModel company = new CompanyViewModel();
+    private bool companyDialogIsOpen = false;
+    private bool deleteCompanyDialogConfirmationIsOpen = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        await LoadCompanies();
+    }
+    #region  Company
+    private async Task LoadFile(IMatFileUploadEntry[] files)
+    {
+        var stream = new MemoryStream();
+        await files[0].WriteToStreamAsync(stream);
+        // var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(stream);
+        company.Logo = stream.ToArray();
+    }
+    //private async Task LoadFile(InputFileChangeEventArgs e)
+    //{
+    //    var files = e.GetMultipleFiles(1);
+    //    var stream = files[0].OpenReadStream();
+    //    var memoryStream = new MemoryStream();
+    //    await stream.CopyToAsync(memoryStream);
+
+    //    company.Logo = memoryStream.ToArray();
+
+    //}
+    private string ByteToString(byte[] image)
+    {
+        if (image is null || image.Length < 1) return null;
+        var base64 = Convert.ToBase64String(image);
+        var result = $"data:image/jpeg;base64,{base64}";
+        return result;
+    }
+    private async Task SaveCompany()
+    {
+        if (company.Id == Guid.Empty)
+            await Http.PostAsJsonAsync($"{Http.BaseAddress}/companies/new", company);
+        else
+            await Http.PutAsJsonAsync($"{Http.BaseAddress}/companies/update/{company.Id}", company);
+
+        await LoadCompanies();
+        company = new CompanyViewModel();
+        companyDialogIsOpen = false;
+    }
+    private void OpenEditCompanyDialog(CompanyViewModel model)
+    {
+        MapToCompany(model);
+        companyDialogIsOpen = true;
+    }
+    private void MapToCompany(CompanyViewModel model)
+    {
+        var currentCompany = new CompanyViewModel();
+        currentCompany.Id = model.Id;
+        currentCompany.TradeName = model.TradeName;
+        currentCompany.Logo = model.Logo;
+        company = currentCompany;
+    }
+    private void OpenEditCompanyDialog()
+    {
+        company = new CompanyViewModel();
+        companyDialogIsOpen = true;
+    }
+    private async Task LoadCompanies()
+    {
+        companies = await Http.GetFromJsonAsync<List<CompanyViewModel>>($"{Http.BaseAddress}/companies");
+    }
+
+    private void OpenDeleteCompanyConfirmationDialog(CompanyViewModel model)
+    {
+        MapToCompany(model);
+        deleteCompanyDialogConfirmationIsOpen = true;
+    }
+    private async Task DeleteCompany(CompanyViewModel model)
+    {
+        await Http.DeleteAsync($"{Http.BaseAddress}/companies/delete-company/{model.Id}");
+        await LoadCompanies();
+        deleteCompanyDialogConfirmationIsOpen = false;
+    }
+    #endregion
+    #region Address
+    private bool addressDialogIsOpen = false;
+    private bool deleteAddressDialogConfirmationIsOpen = false;
+    private AddressViewModel address = new AddressViewModel();
+    private async Task SaveAddress()
+    {
+        if (address.Id == Guid.Empty)
+            await Http.PostAsJsonAsync($"{Http.BaseAddress}/companies/add-address", address);
+        else
+            await Http.PutAsJsonAsync($"{Http.BaseAddress}/companies/edit-address/{address.Id}", address);
+        await LoadCompanies();
+        addressDialogIsOpen = false;
+    }
+    private void OpenEditAddressDialog(Guid companyId)
+    {
+        address = new AddressViewModel();
+        address.CompanyId = companyId;
+        addressDialogIsOpen = true;
+    }
+    private void OpenEditAddressDialog(AddressViewModel model)
+    {
+        MapToAddress(model);
+        addressDialogIsOpen = true;
+    }
+    private void OpenDeleteAddressConfirmationDialog(AddressViewModel model)
+    {
+        MapToAddress(model);
+        deleteAddressDialogConfirmationIsOpen = true;
+    }
+    private void MapToAddress(AddressViewModel model)
+    {
+        var currentAddress = new AddressViewModel();
+        currentAddress.Id = model.Id;
+        currentAddress.StreetName = model.StreetName;
+        currentAddress.Number = model.Number;
+        currentAddress.CompanyId = model.CompanyId;
+        address = currentAddress;
+    }
+    private async Task DeleteAddress(AddressViewModel model)
+    {
+        await Http.DeleteAsync($"{Http.BaseAddress}/companies/delete-address/{model.Id}");
+        await LoadCompanies();
+        deleteAddressDialogConfirmationIsOpen = false;
+    }
+    #endregion
+
+}
