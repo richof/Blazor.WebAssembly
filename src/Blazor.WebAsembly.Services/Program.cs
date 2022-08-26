@@ -1,41 +1,27 @@
-using Blazor.WebAsembly.Services.AutoMapper;
-using Blazor.WebAsembly.Services.Data;
-
+using Blazor.WebAsembly.Services.IdentityData;
+using Microsoft.EntityFrameworkCore;
+using Blazor.WebAsembly.Services.Configurations;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+//builder.Services.AddControllers();
 builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", true, true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
     .AddEnvironmentVariables();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-#region business services
 
-builder.Services.AddScoped<IDataAccess, DataAccess>();
-builder.Services.AddScoped<ICompanyData, CompanyData>();
-#endregion
-builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
+builder.Services.AddIdentityConfiguration(builder.Configuration);
+builder.Services.RegisterServices();
+
+builder.Services.AddApiConfiguration();
+builder.Services.AddSwaggerConfiguration();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-app.UseCors(x => x
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    // .AllowAnyOrigin()
-                    .SetIsOriginAllowed(origin => true)
-                    .AllowCredentials()); app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
-app.MapControllers();
+app.UseApiConfiguration();
+app.UseSwaggerConfiguration();
 
 app.Run();
