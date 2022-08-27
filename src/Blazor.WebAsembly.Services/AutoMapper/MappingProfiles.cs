@@ -2,6 +2,7 @@
 
 using Blazor.WebAssembly.Core;
 using Blazor.WebAssembly.Core.ViewModels;
+using System.Security.Claims;
 
 namespace Blazor.WebAsembly.Services.AutoMapper
 {
@@ -11,6 +12,7 @@ namespace Blazor.WebAsembly.Services.AutoMapper
         {
             CreateMap<Company, CompanyViewModel>().ReverseMap();
             CreateMap<Address, AddressViewModel>().ReverseMap();
+            CreateMap<Claim, ClaimModel>();
         }
     }
 }
