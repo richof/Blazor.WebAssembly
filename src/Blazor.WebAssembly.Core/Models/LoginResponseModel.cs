@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Blazor.WebAssembly.Core.ViewModels
+namespace Blazor.WebAssembly.Core.Models
 {
     public class LoginResponseModel
     {
-        public string Token{ get; set; }
-        public double ExpiresIn { get; set; }
-        public List<ClaimModel> Claims { get; set; } = new List<ClaimModel>();
+        public string AccessToken { get; set; }
+        public string UserName { get; set; }
+        //public double ExpiresIn { get; set; }
+        //public List<ClaimModel> Claims { get; set; } = new List<ClaimModel>();
     }
     public class ClaimModel
     {

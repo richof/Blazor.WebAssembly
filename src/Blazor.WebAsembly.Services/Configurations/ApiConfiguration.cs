@@ -1,5 +1,6 @@
 ﻿using Blazor.WebAsembly.Services.AutoMapper;
 using Blazor.WebAsembly.Services.Data;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Blazor.WebAsembly.Services.Configurations
 {
@@ -17,6 +18,10 @@ namespace Blazor.WebAsembly.Services.Configurations
                         builder.AllowAnyMethod();
                         builder.AllowAnyHeader();
                     });
+            });
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
             });
             return services;
 

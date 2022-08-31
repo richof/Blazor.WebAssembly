@@ -1,0 +1,58 @@
+﻿@using Blazor.WebAssembly.Core.Models
+@using Blazor.WebAssembly.UI.Authentication
+@using Blazor.WebAssembly.UI.Services
+@inject IAuthenticationService AuthService
+@inject NavigationManager Navigation
+@page "/login"
+
+        <h3>Log In</h3>
+        <EditForm Context="childContext" Model="model" OnValidSubmit="ExecuteLogin" class="card card-body bg-light mt-5">
+            <DataAnnotationsValidator />
+            <div class="form-group row">
+                <label for="Email" class=" col-md-2 col-form-label">Email</label>
+                <div class="col-md-10">
+                    <InputText id="Email" @bind-Value="model.Email" class="form-control" />
+                    <ValidationMessage For="@(()=>model.Email)" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="Password" class=" col-md-2 col-form-label">Email</label>
+                <div class="col-md-10">
+                    <InputText id="Password" @bind-Value="model.Password" class="form-control" />
+                    <ValidationMessage For="@(()=>model.Password)" />
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary col-md-1 align-content-end">LogIn</button>
+        </EditForm>
+        @if (showSummary)
+        {
+            <CustomErrorsSummary Messages="@messages" Show="@showSummary" />
+        }
+
+
+@code {
+    private LoginModel model = new();
+    private bool showSummary = false;
+    private string error = "";
+    private List<ErrorModel> messages;
+    private async Task ExecuteLogin()
+    {
+        showSummary = false;
+        var login = await AuthService.Login(model);
+        if (login is not null)
+            Navigation.NavigateTo("/");
+
+
+        //if(!login.Errors.Any())
+        //{
+        //    Navigation.NavigateTo("/");
+        //}
+        //else{
+        //    showSummary = true;
+        //    messages = login.Errors;
+        //    StateHasChanged();
+        //}
+
+
+    }
+}

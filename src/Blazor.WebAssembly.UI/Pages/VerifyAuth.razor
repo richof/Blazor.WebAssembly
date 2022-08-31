@@ -1,0 +1,37 @@
+﻿@page "/verifyauth"
+@using Blazor.WebAssembly.Core
+@using Microsoft.AspNetCore.Identity
+<h3>VerifyAuth</h3>
+@if(isAuthenticated)
+{
+    <h4>@userName is authenticated</h4>
+    <ul>
+        <li>Access to Visitor Role: @isVisitor</li>
+        <li>Access to Admin Role: @isAdmin</li>
+    </ul>
+}else{
+    <h4>You are not authenticated</h4>
+}
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState{ get; set; }
+    private bool isAuthenticated = false;
+    private string userName;
+    private bool isVisitor = false;
+    private bool isAdmin = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState;
+        if(authState.User.Identity.IsAuthenticated)
+        {
+            var user = authState.User;
+            isAuthenticated = true;
+            userName = authState.User.FindFirst(ClaimTypes.Name)?.Value;
+            isVisitor = authState.User.IsInRole("visitor");
+            isAdmin = authState.User.IsInRole("admin");
+        }
+    }
+}

@@ -1,0 +1,84 @@
+﻿@using Blazor.WebAssembly.Core.Models
+@using Blazor.WebAssembly.UI.Services
+@using Microsoft.AspNetCore.Http
+
+@inject IAccountServices _service;
+@page "/Register"
+<h3>Register</h3>
+
+<EditForm Model="model" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row">
+        <label for="Email" class="col-md-10 col-form-label">Email</label>
+        <div class="col-md-5">
+            <InputText id="Email" @bind-Value="model.Email" class="form-control" />
+            <ValidationMessage For="@(()=>model.Email)" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="FullName" class="col-md-10 col-form-label">FullName</label>
+        <div class="col-md-5">
+            <InputText id="FullName" @bind-Value="model.FullName" class="form-control" />
+            <ValidationMessage For="@(()=>model.FullName)" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="Password" class="col-md-10 col-form-label">Password</label>
+        <div class="col-md-5">
+            <InputText id="Password" @bind-Value="model.Password" class="form-control" />
+            <ValidationMessage For="@(()=>model.Password)" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-5">
+            <label for="ConfirmPassword" class="col-md-10 col-form-label"> Confirm Password</label>
+            <InputText id="ConfirmPassword" @bind-Value="model.ConfirmPassword" class="form-control" />
+            <ValidationMessage For="@(()=>model.ConfirmPassword)" />
+        </div>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Save</button>
+    @if (showSummary)
+    {
+        <CustomErrorsSummary Messages="@messages" Show="@showSummary" />
+    }
+    @if (showSuccessMessage)
+    {
+        <div class="alert-success">@model.Email Registered successfully</div>
+    }
+</EditForm>
+
+
+
+
+@code {
+    private RegisterModel model = new RegisterModel();
+    private List<ErrorModel> messages;
+    private bool showSummary = false;
+    private bool showSuccessMessage = false;
+
+    private async void Save()
+    {
+
+        var result = await _service.Register(model);
+        if (result.Errors.Any())
+        {
+            messages = result.Errors;
+            showSummary = true;
+            showSuccessMessage = false;
+
+
+        }
+        else
+        {
+            showSuccessMessage = true;
+            showSummary = false;
+            model = new RegisterModel();
+        }
+        StateHasChanged();
+        return;
+    }
+
+
+}

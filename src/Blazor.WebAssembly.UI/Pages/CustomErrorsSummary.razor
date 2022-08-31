@@ -1,0 +1,16 @@
+﻿@using Blazor.WebAssembly.Core.Models
+@if (Show)
+{
+    @foreach (var message in Messages)
+    {
+        <div class="alert-danger">@message.Property - @message.Message</div>
+    }
+}
+@code {
+    [Parameter]
+    public List<ErrorModel> Messages { get; set; }
+    [Parameter]
+    public bool Show { get; set; }
+   
+   
+}

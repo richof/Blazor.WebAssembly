@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 namespace Blazor.WebAsembly.Services.Configurations
@@ -16,6 +17,7 @@ namespace Blazor.WebAsembly.Services.Configurations
             {
                 options.UseSqlServer(configuration.GetConnectionString("Default"));
             });
+           
             services.AddDefaultIdentity<ApplicationUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -24,12 +26,12 @@ namespace Blazor.WebAsembly.Services.Configurations
             var appSettingsSection = configuration.GetSection("TokenSettings");
             services.Configure<TokenSettings>(appSettingsSection);
             var appSettings = appSettingsSection.Get<TokenSettings>();
-            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+            var key = Encoding.UTF8.GetBytes(appSettings.Secret);
             services.AddAuthentication(o =>
             {
-                o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(bOptions =>
+                o.DefaultAuthenticateScheme = "JwtBearer"; //JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = "JwtBearer"; //JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer("JwtBearer",bOptions =>
             {
                 bOptions.RequireHttpsMetadata = true;
                 bOptions.SaveToken = true;
@@ -40,10 +42,13 @@ namespace Blazor.WebAsembly.Services.Configurations
                     ValidateAudience = true,
                     ValidateIssuer = true,
                     ValidAudience = appSettings.Audience,
-                    ValidIssuer = appSettings.Issuer
+                    ValidIssuer = appSettings.Issuer,
+                    ValidateLifetime=true,
+                    ClockSkew=TimeSpan.FromMinutes(5)
                 };
 
             });
+            
             return services;
         }
 

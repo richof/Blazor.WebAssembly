@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Blazor.WebAssembly.Core.ViewModels
+namespace Blazor.WebAssembly.Core.Models
 {
-    public class AddressViewModel
+    public class AddressModel
     {
         [Key]
         public Guid Id { get; set; }

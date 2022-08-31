@@ -1,0 +1,32 @@
+﻿
+<div>
+    <AuthorizeView>
+        <Authorized>
+            <MatAppBarTitle >@userName</MatAppBarTitle>
+            <MatButtonLink Href="logout" Raised="true">Log Out</MatButtonLink>
+
+        </Authorized>
+        <NotAuthorized>
+            <MatButtonLink Href="register" Raised="true">Register</MatButtonLink>
+            <MatButtonLink Href="login" Raised="true">Login</MatButtonLink>            
+        </NotAuthorized>
+    </AuthorizeView>
+
+
+</div>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+    private string userName;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState;
+        if (authState.User.Identity.IsAuthenticated)                 
+            userName = authState.User.FindFirst(ClaimTypes.Name)?.Value;
+
+       
+    }
+}
