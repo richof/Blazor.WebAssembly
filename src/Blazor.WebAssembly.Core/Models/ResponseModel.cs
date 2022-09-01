@@ -5,6 +5,7 @@ namespace Blazor.WebAssembly.Core.Models
     {
         public int StatusCode { get; set; }
         public string Data { get; set; }
+     
         public List<ErrorModel> Errors { get; set; }
         public ResponseModel()
         {

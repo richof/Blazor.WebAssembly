@@ -1,6 +1,7 @@
 ﻿@using Blazor.WebAssembly.Core.Models
 @using Blazor.WebAssembly.UI.Services
 @using Microsoft.AspNetCore.Http
+@inject NavigationManager Navigation;
 
 @inject IAccountServices _service;
 @page "/Register"
@@ -75,9 +76,11 @@
             showSuccessMessage = true;
             showSummary = false;
             model = new RegisterModel();
+            Navigation.NavigateTo("/");
         }
         StateHasChanged();
-        return;
+        
+        
     }
 
 

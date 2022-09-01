@@ -39,8 +39,8 @@ namespace Blazor.WebAsembly.Services.Configurations
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateAudience = true,
-                    ValidateIssuer = true,
+                    ValidateAudience = false,
+                    ValidateIssuer = false,
                     ValidAudience = appSettings.Audience,
                     ValidIssuer = appSettings.Issuer,
                     ValidateLifetime=true,

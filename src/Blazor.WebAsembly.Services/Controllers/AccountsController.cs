@@ -41,7 +41,7 @@ namespace Blazor.WebAsembly.Services.Controllers
         }
 
         [HttpPost("register")]
-        [AllowAnonymous]
+        
         public async Task<ActionResult> RegisterAsync(RegisterModel model)
         {
             if(!ModelState.IsValid)
@@ -140,6 +140,7 @@ namespace Blazor.WebAsembly.Services.Controllers
           => (long)Math.Round((date.ToUniversalTime() - new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds);
         [Route("token")]
         [HttpPost]
+      
         public async Task<IActionResult> Create([FromForm]string userName, [FromForm] string password, [FromForm] string grant_type)
         {
             if(await IsValidUserNameAndPassword(userName,password))
