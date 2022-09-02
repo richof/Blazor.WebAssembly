@@ -1,21 +1,10 @@
 ﻿
-<div style="min-width:300px padding: 10px;">
+<div>
     <AuthorizeView>
         <Authorized>
+            <MatAppBarTitle >@userName</MatAppBarTitle>
+            <MatButtonLink Href="logout" Raised="true">Log Out</MatButtonLink>
 
-          
-            <MatNavMenu Style="width:300px">
-                <MatNavSubMenu @bind-Expanded="@openMenu">
-                <MatNavSubMenuHeader Style="width:250px">
-                        <MatNavItem AllowSelection="false"><MatIcon Icon="face"></MatIcon>&nbsp; "@userName</MatNavItem>
-                </MatNavSubMenuHeader>
-                    <MatNavSubMenuList Style="margin-top:50px">
-                        <MatNavItem Href="manageuserroles" Title="Manage User Roles"> </MatNavItem>
-                        <MatNavItem Href="logout" Title="Log Out"> </MatNavItem>
-                    
-                </MatNavSubMenuList>
-            </MatNavSubMenu>
-            </MatNavMenu>
         </Authorized>
         <NotAuthorized>
             <MatButtonLink Href="register" Raised="true">Register</MatButtonLink>
@@ -30,18 +19,14 @@
     [CascadingParameter]
     public Task<AuthenticationState> AuthState { get; set; }
     private string userName;
-    private bool openMenu;
-    MatButton userNameButton;
-    BaseMatMenu menu;
+
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthState;
         if (authState.User.Identity.IsAuthenticated)                 
-            userName = authState.User.FindFirst(ClaimTypes.Name)?.Value;     
-    }
-    public void OnClick(MouseEventArgs e)
-    {
-        this.menu.OpenAsync(userNameButton.Ref);
+            userName = authState.User.FindFirst(ClaimTypes.Name)?.Value;
+
+       
     }
 }
