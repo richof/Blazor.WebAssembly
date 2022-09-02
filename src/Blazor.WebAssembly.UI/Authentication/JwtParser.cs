@@ -22,7 +22,7 @@ namespace Blazor.WebAssembly.UI.Authentication
         {
             const string roleClaimType = "role";
            
-            keyValuePairs.TryGetValue(roleClaimType, out object roles);
+            keyValuePairs.TryGetValue(ClaimTypes.Role, out object roles);
             if (roles is not null)
             {
                 var parsedRoles = roles.ToString().Trim().TrimStart('[').TrimEnd(']').Split(',');
@@ -35,9 +35,9 @@ namespace Blazor.WebAssembly.UI.Authentication
                 }
                 else
                 {
-                    claims.Add(new Claim(roleClaimType, parsedRoles[0]));
+                    claims.Add(new Claim(ClaimTypes.Role, parsedRoles[0]));
                 }
-                keyValuePairs.Remove(roleClaimType);
+                keyValuePairs.Remove(ClaimTypes.Role);
             }
         }
         private static byte[] ParseBase64WithoutPadding(string base64)

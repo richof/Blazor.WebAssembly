@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -41,10 +42,10 @@ namespace Blazor.WebAsembly.Services.Controllers
         }
 
         [HttpPost("register")]
-        
+
         public async Task<ActionResult> RegisterAsync(RegisterModel model)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return CustomResponse(ModelState);
             }
@@ -65,9 +66,9 @@ namespace Blazor.WebAsembly.Services.Controllers
             else
             {
                 foreach (var error in result.Errors)
-                    AddError(error.Code,error.Description);
+                    AddError(error.Code, error.Description);
             }
-            
+
             return CustomResponse(result);
         }
         [HttpPost("login")]
@@ -78,13 +79,14 @@ namespace Blazor.WebAsembly.Services.Controllers
                 return CustomResponse(ModelState);
             }
             //if (!ModelState.IsValid) return BadRequest(model);
-            var user=await _userManager.FindByEmailAsync(model.Email);
-            if (user is null) {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user is null)
+            {
                 AddError("UserName/Password", "Invalid User Name or Password");
                 return CustomResponse();
             }
-            var login = await _signInManager.PasswordSignInAsync(user, model.Password,false,false);
-            if(login.Succeeded)
+            var login = await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
+            if (login.Succeeded)
             {
                 var token = await GenerateTokenAsync(user);
                 return CustomResponse(token);
@@ -96,7 +98,7 @@ namespace Blazor.WebAsembly.Services.Controllers
         private async Task<LoginResponseModel> GenerateTokenAsync(ApplicationUser user)
         {
             var claims = await _userManager.GetClaimsAsync(user);
-            var userRoles =  await _userManager.GetRolesAsync(user);
+            var userRoles = await _userManager.GetRolesAsync(user);
             IList<Claim> roleClaims = new List<Claim>();
             roleClaims = await _roleManager.GetClaimsAsync(await _roleManager.FindByNameAsync(userRoles.FirstOrDefault()));
             //foreach (var roleClaim in roleClaims)
@@ -117,7 +119,7 @@ namespace Blazor.WebAsembly.Services.Controllers
             var identityClaims = new ClaimsIdentity(claims);
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_tokenSettings.Secret);
-            var exp=DateTime.UtcNow.AddHours(_tokenSettings.ExpiresIn);
+            var exp = DateTime.UtcNow.AddHours(_tokenSettings.ExpiresIn);
             var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
             {
                 Issuer = _tokenSettings.Issuer,
@@ -130,7 +132,7 @@ namespace Blazor.WebAsembly.Services.Controllers
             var result = new LoginResponseModel
             {
                 AccessToken = encodedToken,
-                UserName=user.UserName
+                UserName = user.UserName
                 //ExpiresIn = TimeSpan.FromMinutes(_tokenSettings.ExpiresIn).TotalSeconds,
                 //Claims = _mapper.Map<IEnumerable<Claim>, IEnumerable<ClaimModel>>(claims).ToList()
             };
@@ -140,10 +142,10 @@ namespace Blazor.WebAsembly.Services.Controllers
           => (long)Math.Round((date.ToUniversalTime() - new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalSeconds);
         [Route("token")]
         [HttpPost]
-      
-        public async Task<IActionResult> Create([FromForm]string userName, [FromForm] string password, [FromForm] string grant_type)
+
+        public async Task<IActionResult> Create([FromForm] string userName, [FromForm] string password, [FromForm] string grant_type)
         {
-            if(await IsValidUserNameAndPassword(userName,password))
+            if (await IsValidUserNameAndPassword(userName, password))
             {
                 return CustomResponse(await GenerateTokenAsync(userName));
             }
@@ -153,7 +155,7 @@ namespace Blazor.WebAsembly.Services.Controllers
                 return CustomResponse();
             }
         }
-        private async Task<bool> IsValidUserNameAndPassword(string userName,string password)
+        private async Task<bool> IsValidUserNameAndPassword(string userName, string password)
         {
             var user = await _userManager.FindByEmailAsync(userName);
             return await _userManager.CheckPasswordAsync(user, password);
@@ -178,7 +180,7 @@ namespace Blazor.WebAsembly.Services.Controllers
                 new Claim(JwtRegisteredClaimNames.Nbf,new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString()),
                 new Claim(JwtRegisteredClaimNames.Exp,new DateTimeOffset(DateTime.Now.AddHours(exp)).ToUnixTimeSeconds().ToString())
             };
-            foreach(var role in roles)
+            foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
@@ -194,6 +196,37 @@ namespace Blazor.WebAsembly.Services.Controllers
                 UserName = user.UserName
             };
             return result;
+        }
+
+        [HttpPut("update-user-roles")]
+        public async Task<IActionResult> UpdateUserRoles(UpdateUserRolesModel model)
+        {
+            var user = await _userManager.FindByNameAsync(model.UserName);
+            List<string> validRoles = new List<string>();
+            foreach (var roleName in model.Roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                if (role is not null)
+                    validRoles.Add(role.Name);
+            }
+            var userRoles = await _userManager.GetRolesAsync(user);
+            foreach (var role in userRoles)
+            {
+                var removeRole = await _userManager.RemoveFromRoleAsync(user, role);
+                if (!removeRole.Succeeded)
+                    AddError("Role", $"{role} role cannot be removed from user");
+            }
+            if (validRoles.Any())
+            {
+                foreach (var newRole in validRoles)
+                {
+                    var addRole=await _userManager.AddToRoleAsync(user, newRole);
+                    if (!addRole.Succeeded)
+                        AddError("Role", $"{newRole} role cannot be added to user");
+                }
+            }
+           
+            return CustomResponse();
         }
 
     }

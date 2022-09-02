@@ -1,0 +1,89 @@
+﻿@page "/manageuserroles"
+@using Blazor.WebAssembly.UI.Models
+<h3>Manage User Roles</h3>
+@inject IAccountServices AccountServices
+@inject NavigationManager Navigation;
+
+
+
+<EditForm Model="model" OnValidSubmit="UpdateUserRoles">
+    <MatCard>
+        <MatCardContent>
+            <MatList>
+                @foreach (var role in roles)
+                {
+                    <MatListItem>@role.Text <MatCheckbox @bind-Value="@(role.Checked)"></MatCheckbox></MatListItem>
+                }
+            </MatList>
+            <MatCardActions>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </MatCardActions>
+        </MatCardContent>
+    </MatCard>
+   
+    
+    <div class="alert alert-warning">If updating roles process goes ok, you will be logged out.</div>
+</EditForm>
+@if (showSummary)
+{
+    <CustomErrorsSummary Messages="@messages" Show="@showSummary" />
+}
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+    private AuthenticationState authState;
+    UpdateUserRolesModel model = new();
+    private List<ErrorModel> messages;
+    private bool showSummary = false;
+    public string test { get; set; }
+    List<SelectItemModel> roles = new List<SelectItemModel> {
+    new SelectItemModel{ Text="Admin", Value="admin"},
+    new SelectItemModel{Text="Vistor", Value="visitor"}
+    };
+
+    public SelectItemModel selectedItem { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        authState = await AuthState;
+        foreach (var role in roles)
+        {
+            var check = authState.User.IsInRole(role.Value);
+            role.Checked = check;
+        }
+    }
+    
+    private async void UpdateUserRoles()
+    {
+        var userWithNewRoles = new UpdateUserRolesModel
+            {
+                UserName = authState.User.Identity.Name,
+                Roles = roles.Where(r => r.Checked).Select(r=>r.Value).ToList()
+            };
+        var result = await AccountServices.UpdateUserRoles(userWithNewRoles);
+        if (result.Errors.Any())
+        {
+            messages = result.Errors;
+            showSummary = true;
+            StateHasChanged();
+        }
+        else
+        {
+            Navigation.NavigateTo("/logout");
+        }
+    }
+    private void LoadRoles(ClaimsPrincipal user)
+    {
+        foreach (var role in roles)
+        {
+            var check= user.IsInRole(role.Value);
+            role.Checked = check;
+            }
+    }
+    private void ChangeCheckBoxHandler()
+    {
+
+
+    }
+}

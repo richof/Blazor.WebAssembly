@@ -46,11 +46,12 @@ namespace Blazor.WebAssembly.UI.Services
             return result;
             
         }
-        public async Task<bool> IsVisitor(ClaimsPrincipal user)
+       public async Task<ResponseModel> UpdateUserRoles(UpdateUserRolesModel model)
         {
-            var result= user.IsInRole("visitor");
+            var response = await _httpClient.PutAsJsonAsync($"{_httpClient.BaseAddress}/accounts/update-user-roles", model);
+            var result =await MapResponse(response);
             return result;
-
         }
+
     }
 }
